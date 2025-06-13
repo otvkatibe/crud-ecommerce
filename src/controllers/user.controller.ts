@@ -9,7 +9,6 @@ import { UnprocessableEntity } from '../exceptions/unprocessable.entity';
 import { RegisterSchema } from '../schema/users';
 
 export const Register = async (req: Request, res:Response, next: NextFunction ) => {
-    try {
     RegisterSchema.parse(req.body);
     
     const { name, email, password } = req.body;
@@ -27,14 +26,10 @@ export const Register = async (req: Request, res:Response, next: NextFunction ) 
     })
 
     res.json(user)
-    } catch (error: any) {
-        return next(new UnprocessableEntity(error?.issues || error, UnprocessableEntity.name, ErrorCode.UNPROCESSABLE_ENTITY));
-    }
 }
 
 export const Login = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { email, password } = req.body;
+    const { email, password } = req.body;
 
         let user = await prisma.user.findFirst({ where: { email} });
         
@@ -48,7 +43,4 @@ export const Login = async (req: Request, res: Response, next: NextFunction) => 
 
         const token = jwt.sign({ userId: user.id }, JWT_SECRET)
         res.json({user, token});
-    } catch (error: any) {
-        return next(new UnprocessableEntity(error?.issues || error, UnprocessableEntity.name, ErrorCode.UNPROCESSABLE_ENTITY));
-    }
 }
