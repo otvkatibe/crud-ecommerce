@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { Register, Login } from '../controllers/user.controller';
-import { errorHandler } from '../errorhandler';
+import { errorHandler } from '../middlewares/errorhandler';
 
 const userRoutes:Router = Router();
 

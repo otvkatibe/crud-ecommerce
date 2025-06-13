@@ -3,9 +3,10 @@ import prisma from '../prisma';
 import { hashSync, compareSync } from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../secrets';
-import { BadRequestService } from '../exceptions/bad.request';
+import { BadRequestException } from '../exceptions/bad.request';
 import { ErrorCode } from '../exceptions/error.exception';
 import { UnprocessableEntity } from '../exceptions/unprocessable.entity';
+import { NotFoundException } from '../exceptions/not.found';
 import { RegisterSchema } from '../schema/users';
 
 export const Register = async (req: Request, res:Response, next: NextFunction ) => {
@@ -15,7 +16,7 @@ export const Register = async (req: Request, res:Response, next: NextFunction ) 
 
     let user = await prisma.user.findFirst({ where: { email: email } })
     if (user) {
-        return next(new BadRequestService('User already exists', ErrorCode.USER_ALREADY_EXISTS))
+        throw new BadRequestException('User already exists', ErrorCode.USER_ALREADY_EXISTS)
     }
     user = await prisma.user.create({
         data: {
@@ -31,16 +32,16 @@ export const Register = async (req: Request, res:Response, next: NextFunction ) 
 export const Login = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
 
-        let user = await prisma.user.findFirst({ where: { email} });
+    let user = await prisma.user.findFirst({ where: { email} });
         
-        if (!user) {
-            return next(new BadRequestService('User not found', ErrorCode.USER_NOT_FOUND));
-        }
+    if (!user) {
+        throw new NotFoundException('User not found', ErrorCode.USER_NOT_FOUND);
+    }
 
-        if (!compareSync(password, user.password)) {
-            return next(new BadRequestService('Invalid password', ErrorCode.INVALID_PASSWORD));
-        }
+    if (!compareSync(password, user.password)) {
+        throw new BadRequestException('Invalid credentials', ErrorCode.INVALID_PASSWORD);
+    }
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET)
-        res.json({user, token});
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET)
+    res.json({user, token});
 }
